@@ -24,11 +24,11 @@ use std::{sync::Arc, time::Instant};
 
 use image::{ImageBuffer, Rgb, RgbImage};
 
-const PARALLEL: bool = false;
+const PARALLEL: bool = true;
 
 fn main() {
     // World, Camera
-    let (world, camera, background) = bvh_test();
+    let (world, camera, background) = _cornell_box();
     //let world = BvhNode::from_list(&mut world, 0.0, 0.1);
 
     // IMAGE
@@ -60,14 +60,10 @@ fn main() {
 }
 
 fn _random_scene() -> (HittableList, Camera, Color) {
-    let checker = Arc::new(CheckerTexture::from_colors(
-        Color::new(0.2, 0.3, 0.1),
-        Color::new(0.9, 0.9, 0.9),
-    ));
     let mut world = HittableList::new_from_object(Arc::new(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Arc::new(Lambertian::from_texture(checker)),
+        Arc::new(Lambertian::from_color(Color::new(0.5, 0.5, 0.5))),
     )));
 
     for a in -11..11 {
@@ -127,8 +123,8 @@ fn _random_scene() -> (HittableList, Camera, Color) {
     let time0 = 0.0;
     let time1 = 1.0;
     let aspect_ratio = 3.0 / 2.0;
-    let width = 400;
-    let samples_per_pixel = 100;
+    let width = 1200;
+    let samples_per_pixel = 500;
     let max_depth = 50;
     let camera = Camera::new(
         lookfrom,
@@ -345,7 +341,7 @@ fn _cornell_box() -> (HittableList, Camera, Color) {
     let box1 = Bbox::new(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 330.0, 165.0),
-        white.clone()
+        white.clone(),
     );
     let box1 = RotateY::new(Arc::new(box1), 15.0);
     let box1 = Translate::new(Arc::new(box1), Vec3::new(265.0, 0.0, 295.0));
@@ -353,7 +349,7 @@ fn _cornell_box() -> (HittableList, Camera, Color) {
     let box2 = Bbox::new(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 165.0, 165.0),
-        white.clone()
+        white.clone(),
     );
     let box2 = RotateY::new(Arc::new(box2), -18.0);
     let box2 = Translate::new(Arc::new(box2), Vec3::new(130.0, 0.0, 65.0));
@@ -371,7 +367,7 @@ fn _cornell_box() -> (HittableList, Camera, Color) {
         0.0,
         555.0,
         0.0,
-        white.clone()
+        white.clone(),
     )));
     world.add(Arc::new(XzRect::new(
         0.0,
@@ -379,7 +375,7 @@ fn _cornell_box() -> (HittableList, Camera, Color) {
         0.0,
         555.0,
         555.0,
-        white.clone()
+        white.clone(),
     )));
     world.add(Arc::new(XyRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
 
@@ -423,7 +419,7 @@ fn _cornell_smoke() -> (HittableList, Camera, Color) {
     let box1 = Bbox::new(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 330.0, 165.0),
-        white.clone()
+        white.clone(),
     );
     let box1 = RotateY::new(Arc::new(box1), 15.0);
     let box1 = Translate::new(Arc::new(box1), Vec3::new(265.0, 0.0, 295.0));
@@ -432,7 +428,7 @@ fn _cornell_smoke() -> (HittableList, Camera, Color) {
     let box2 = Bbox::new(
         Point3::new(0.0, 0.0, 0.0),
         Point3::new(165.0, 165.0, 165.0),
-        white.clone()
+        white.clone(),
     );
     let box2 = RotateY::new(Arc::new(box2), -18.0);
     let box2 = Translate::new(Arc::new(box2), Vec3::new(130.0, 0.0, 65.0));
@@ -451,7 +447,7 @@ fn _cornell_smoke() -> (HittableList, Camera, Color) {
         0.0,
         555.0,
         0.0,
-        white.clone()
+        white.clone(),
     )));
     world.add(Arc::new(XzRect::new(
         0.0,
@@ -459,7 +455,7 @@ fn _cornell_smoke() -> (HittableList, Camera, Color) {
         0.0,
         555.0,
         555.0,
-        white.clone()
+        white.clone(),
     )));
     world.add(Arc::new(XyRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
 
@@ -493,6 +489,55 @@ fn _cornell_smoke() -> (HittableList, Camera, Color) {
     (world, camera, color::BLACK)
 }
 
+fn _bvh_test() -> (HittableList, Camera, Color) {
+    let material: Arc<dyn Material> =
+        Arc::new(Lambertian::from_color(Color::new(0.65, 0.05, 0.05)));
+    let mut world = HittableList::default();
+
+    let mut spheres = HittableList::default();
+    for i in 0..10000 {
+        let i = i as f64;
+        spheres.add(Arc::new(Sphere::new(
+            Point3::new(0.0, 100.0 + i * 2.0, 0.0),
+            1.0,
+            material.clone(),
+        )));
+    }
+
+    let bvh = Arc::new(BvhNode::from_list(&mut spheres, 0.0, 1.0));
+    world.add(bvh);
+    //world.add(Arc::new(spheres));
+
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfov = 20.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+    let aspect_ratio = 3.0 / 2.0;
+    let width = 400;
+    let samples_per_pixel = 100;
+    let max_depth = 50;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        aperture,
+        dist_to_focus,
+        time0,
+        time1,
+        aspect_ratio,
+        width,
+        samples_per_pixel,
+        max_depth,
+    );
+
+    (world, camera, Color::new(0.7, 0.8, 1.0))
+}
+
 fn _final_scene() -> (HittableList, Camera, Color) {
     let mut boxes1 = HittableList::default();
     let ground: Arc<dyn Material> = Arc::new(Lambertian::from_color(Color::new(0.48, 0.83, 0.53)));
@@ -510,7 +555,7 @@ fn _final_scene() -> (HittableList, Camera, Color) {
             boxes1.add(Arc::new(Bbox::new(
                 Point3::new(x0, y0, z0),
                 Point3::new(x1, y1, z1),
-                ground.clone()
+                ground.clone(),
             )));
         }
     }
@@ -630,54 +675,6 @@ fn _final_scene() -> (HittableList, Camera, Color) {
     );
 
     (objects, camera, color::BLACK)
-}
-
-fn bvh_test() -> (HittableList, Camera, Color) {
-    let material: Arc<dyn Material> = Arc::new(Lambertian::from_color(Color::new(0.65, 0.05, 0.05)));
-    let mut world = HittableList::default();
-
-    let mut spheres = HittableList::default();
-    for i in 0..2 {
-        let i = i as f64;
-        spheres.add(Arc::new(Sphere::new(
-            Point3::new(0.0, 100.0 + i * 2.0, 0.0),
-            1.0,
-            material.clone(),
-        )));   
-    }
-
-    let bvh = Arc::new(BvhNode::from_list(&mut spheres, 0.0, 1.0));
-    world.add(bvh);
-    //world.add(Arc::new(spheres));
-
-    let lookfrom = Point3::new(13.0, 2.0, 3.0);
-    let lookat = Point3::new(0.0, 0.0, 0.0);
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
-    let aperture = 0.0;
-    let vfov = 20.0;
-    let time0 = 0.0;
-    let time1 = 1.0;
-    let aspect_ratio = 3.0 / 2.0;
-    let width = 400;
-    let samples_per_pixel = 1;
-    let max_depth = 50;
-    let camera = Camera::new(
-        lookfrom,
-        lookat,
-        vup,
-        vfov,
-        aperture,
-        dist_to_focus,
-        time0,
-        time1,
-        aspect_ratio,
-        width,
-        samples_per_pixel,
-        max_depth,
-    );
-
-    (world, camera, Color::new(0.7, 0.8, 1.0))
 }
 
 fn iterate_pixel(

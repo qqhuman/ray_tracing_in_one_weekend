@@ -28,6 +28,8 @@ impl Aabb {
     }
 
     pub fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> bool {
+        let mut t_min = t_min;
+        let mut t_max = t_max;
         for a in 0..3 {
             let inv_d = 1.0 / r.direction.get(a);
             let mut t0 = (self.min.get(a) - r.origin.get(a)) * inv_d;
@@ -37,8 +39,8 @@ impl Aabb {
                 swap(&mut t0, &mut t1);
             }
 
-            let t_min = if t0 > t_min { t0 } else { t_min };
-            let t_max = if t1 < t_max { t1 } else { t_max };
+            t_min = if t0 > t_min { t0 } else { t_min };
+            t_max = if t1 < t_max { t1 } else { t_max };
             if t_max <= t_min {
                 return false;
             }
@@ -46,23 +48,25 @@ impl Aabb {
         return true;
     }
 
-    pub fn _hit(&self, r: &Ray, t_min: f64, t_max: f64) -> bool {
-        for a in 0..3 {
-            let t0 = f64::min(
-                (self.min.get(a) - r.origin.get(a)) / r.direction.get(a),
-                (self.max.get(a) - r.origin.get(a)) / r.direction.get(a),
-            );
-            let t1 = f64::max(
-                (self.min.get(a) - r.origin.get(a)) / r.direction.get(a),
-                (self.max.get(a) - r.origin.get(a)) / r.direction.get(a),
-            );
+    // pub fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> bool {
+    //     let mut t_min = t_min;
+    //     let mut t_max = t_max;
+    //     for a in 0..3 {
+    //         let t0 = f64::min(
+    //             (self.min.get(a) - r.origin.get(a)) / r.direction.get(a),
+    //             (self.max.get(a) - r.origin.get(a)) / r.direction.get(a),
+    //         );
+    //         let t1 = f64::max(
+    //             (self.min.get(a) - r.origin.get(a)) / r.direction.get(a),
+    //             (self.max.get(a) - r.origin.get(a)) / r.direction.get(a),
+    //         );
 
-            let t_min = t0.max(t_min);
-            let t_max = t1.min(t_max);
-            if t_max <= t_min {
-                return false;
-            }
-        }
-        return true;
-    }
+    //         t_min = t0.max(t_min);
+    //         t_max = t1.min(t_max);
+    //         if t_max <= t_min {
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // }
 }
