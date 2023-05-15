@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use crate::rt::{materials::Material, ray::Ray, vec3::Vec3, Point3, PI};
+use crate::rt::{
+    materials::Material, onb::Onb, random_to_sphere, ray::Ray, vec3::Vec3, Point3, PI,
+};
 
 use super::{aabb::Aabb, HitRecord, Hittable};
 
@@ -70,5 +72,24 @@ impl Hittable for Sphere {
     fn bounding_box(&self, _time0: f64, _time1: f64) -> Option<Aabb> {
         let radius = Vec3::new(self.radius, self.radius, self.radius);
         Some(Aabb::new(self.center - radius, self.center + radius))
+    }
+
+    fn pdf_value(&self, o: Point3, v: Vec3) -> f64 {
+        match self.hit(&Ray::new(o, v, 0.0), 0.001, f64::INFINITY) {
+            None => 0.0,
+            Some(_) => {
+                let cos_theta_max =
+                    f64::sqrt(1.0 - self.radius * self.radius / (self.center - o).length_squared());
+                let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
+                1.0 / solid_angle
+            }
+        }
+    }
+
+    fn random(&self, o: Point3) -> Vec3 {
+        let direction = self.center - o;
+        let distance_squared = direction.length_squared();
+        let uvw = Onb::build_from_w(direction);
+        uvw.local(random_to_sphere(self.radius, distance_squared))
     }
 }

@@ -1,11 +1,5 @@
-use super::Material;
-use crate::rt::{
-    color::{self, Color},
-    random_f64,
-    ray::Ray,
-    shapes::hit_record::HitRecord,
-    vec3::Vec3,
-};
+use super::{scatter_record::ScatterRecord, Material};
+use crate::rt::{color, random_f64, ray::Ray, shapes::hit_record::HitRecord, vec3::Vec3};
 
 pub struct Dielectric {
     ior: f64,
@@ -18,8 +12,7 @@ impl Dielectric {
 }
 
 impl Material for Dielectric {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let attenuation = color::WHITE;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let refraction_ratio = if rec.front_face {
             1.0 / self.ior
         } else {
@@ -38,8 +31,10 @@ impl Material for Dielectric {
                 Vec3::refract(unit_direction, rec.normal, refraction_ratio)
             };
 
-        let scattered = Ray::new(rec.p, direction, r_in.time);
-        Some((attenuation, scattered))
+        Some(ScatterRecord::Specular {
+            attenuation: color::WHITE,
+            ray: Ray::new(rec.p, direction, r_in.time),
+        })
     }
 }
 

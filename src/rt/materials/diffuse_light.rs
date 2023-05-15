@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
 use crate::rt::{
-    color::Color,
+    color::{self, Color},
     ray::Ray,
     shapes::hit_record::HitRecord,
     textures::{solid_color::SolidColor, Texture},
     Point3,
 };
 
-use super::Material;
+use super::{scatter_record::ScatterRecord, Material};
 
 pub struct DiffuseLight {
     emit: Arc<dyn Texture>,
@@ -25,11 +25,15 @@ impl DiffuseLight {
 }
 
 impl Material for DiffuseLight {
-    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord) -> Option<ScatterRecord> {
         None
     }
 
-    fn emitted(&self, u: f64, v: f64, p: Point3) -> Color {
-        self.emit.value(u, v, p)
+    fn emitted(&self, _r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: Point3) -> Color {
+        if rec.front_face {
+            self.emit.value(u, v, p)
+        } else {
+            color::BLACK
+        }
     }
 }

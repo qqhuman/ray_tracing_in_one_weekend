@@ -1,4 +1,4 @@
-use super::Material;
+use super::{scatter_record::ScatterRecord, Material};
 use crate::rt::{
     color::Color, random_in_unit_sphere, ray::Ray, shapes::hit_record::HitRecord, vec3::Vec3,
 };
@@ -16,17 +16,15 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
         let reflected = Vec3::reflect(Vec3::unit_vector(r_in.direction), rec.normal);
-        let scattered = Ray::new(
-            rec.p,
-            reflected + self.fuzz * random_in_unit_sphere(),
-            r_in.time,
-        );
-        if Vec3::dot(scattered.direction, rec.normal) > 0.0 {
-            Some((self.albedo, scattered))
-        } else {
-            None
-        }
+        Some(ScatterRecord::Specular {
+            attenuation: self.albedo,
+            ray: Ray::new(
+                rec.p,
+                reflected + self.fuzz * random_in_unit_sphere(),
+                r_in.time,
+            ),
+        })
     }
 }

@@ -5,9 +5,9 @@ use gfx::rt::{
         dielectric::Dielectric, diffuse_light::DiffuseLight, lambertian::Lambertian, metal::Metal,
         Material,
     },
-    random_f64, random_f64_between, random_vec3, random_vec3_between, ray_color,
+    random_f64, random_f64_between, random_vec3, random_vec3_between, render_pixel,
     shapes::{
-        bbox::Bbox, bvh_node::BvhNode, constant_volume::ConstantVolume,
+        bbox::Bbox, bvh_node::BvhNode, constant_volume::ConstantVolume, flip_face::FlipFace,
         hittable_list::HittableList, mooving_sphere::MovingSphere, rotate_y::RotateY,
         sphere::Sphere, translate::Translate, xy_rect::XyRect, xz_rect::XzRect, yz_rect::YzRect,
         Hittable,
@@ -28,8 +28,22 @@ const PARALLEL: bool = true;
 
 fn main() {
     // World, Camera
-    let (world, camera, background) = _cornell_box();
-    //let world = BvhNode::from_list(&mut world, 0.0, 0.1);
+    let (world, camera, background) = _cornell_aluminum_glass();
+    let light: Arc<dyn Material> = Arc::new(DiffuseLight::from_color(Color::new(15.0, 15.0, 15.0)));
+    let mut lights = HittableList::default();
+    lights.add(Arc::new(XzRect::new(
+        213.0,
+        343.0,
+        227.0,
+        332.0,
+        554.0,
+        light.clone(),
+    )));
+    lights.add(Arc::new(Sphere::new(
+        Point3::new(190.0, 90.0, 190.0),
+        90.0,
+        light.clone(),
+    )));
 
     // IMAGE
     let mut buffer: RgbImage = ImageBuffer::new(camera.width as u32, camera.height as u32);
@@ -41,12 +55,12 @@ fn main() {
     let start = Instant::now();
     if PARALLEL {
         buffer.enumerate_pixels_mut().par_bridge().for_each(|arg| {
-            iterate_pixel(arg, &camera, background, &world);
+            iterate_pixel(arg, &camera, background, &world, &lights);
             bar.inc(1);
         });
     } else {
         buffer.enumerate_pixels_mut().for_each(|arg| {
-            iterate_pixel(arg, &camera, background, &world);
+            iterate_pixel(arg, &camera, background, &world, &lights);
             bar.inc(1);
         });
     }
@@ -358,9 +372,9 @@ fn _cornell_box() -> (HittableList, Camera, Color) {
     world.add(Arc::new(YzRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
     world.add(Arc::new(YzRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
 
-    world.add(Arc::new(XzRect::new(
+    world.add(Arc::new(FlipFace::new(Arc::new(XzRect::new(
         213.0, 343.0, 227.0, 332.0, 554.0, light,
-    )));
+    )))));
     world.add(Arc::new(XzRect::new(
         0.0,
         555.0,
@@ -389,7 +403,82 @@ fn _cornell_box() -> (HittableList, Camera, Color) {
     let time1 = 1.0;
     let aspect_ratio = 1.0;
     let width = 600;
-    let samples_per_pixel = 200;
+    let samples_per_pixel = 100;
+    let max_depth = 50;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        aperture,
+        dist_to_focus,
+        time0,
+        time1,
+        aspect_ratio,
+        width,
+        samples_per_pixel,
+        max_depth,
+    );
+
+    (world, camera, color::BLACK)
+}
+
+fn _cornell_aluminum_glass() -> (HittableList, Camera, Color) {
+    let red: Arc<dyn Material> = Arc::new(Lambertian::from_color(Color::new(0.65, 0.05, 0.05)));
+    let white: Arc<dyn Material> = Arc::new(Lambertian::from_color(Color::new(0.73, 0.73, 0.73)));
+    let green: Arc<dyn Material> = Arc::new(Lambertian::from_color(Color::new(0.12, 0.45, 0.15)));
+    let light: Arc<dyn Material> = Arc::new(DiffuseLight::from_color(Color::new(15.0, 15.0, 15.0)));
+
+    let mut world = HittableList::default();
+    world.add(Arc::new(YzRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
+    world.add(Arc::new(YzRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
+    world.add(Arc::new(FlipFace::new(Arc::new(XzRect::new(
+        213.0, 343.0, 227.0, 332.0, 554.0, light,
+    )))));
+    world.add(Arc::new(XzRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        0.0,
+        white.clone(),
+    )));
+    world.add(Arc::new(XzRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
+    world.add(Arc::new(XyRect::new(0.0, 555.0, 0.0, 555.0, 555.0, white)));
+
+    let aluminum: Arc<dyn Material> = Arc::new(Metal::new(Color::new(0.8, 0.85, 0.88), 0.0));
+    let box1 = Bbox::new(
+        Point3::new(0.0, 0.0, 0.0),
+        Point3::new(165.0, 330.0, 165.0),
+        aluminum,
+    );
+    let box1 = RotateY::new(Arc::new(box1), 15.0);
+    let box1 = Translate::new(Arc::new(box1), Vec3::new(265.0, 0.0, 295.0));
+    world.add(Arc::new(box1));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(190.0, 90.0, 190.0),
+        90.0,
+        Arc::new(Dielectric::new(1.5)),
+    )));
+
+    let lookfrom = Point3::new(278.0, 278.0, -800.0);
+    let lookat = Point3::new(278.0, 278.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.0;
+    let vfov = 40.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
+    let aspect_ratio = 1.0;
+    let width = 600;
+    let samples_per_pixel = 1000;
     let max_depth = 50;
     let camera = Camera::new(
         lookfrom,
@@ -682,23 +771,13 @@ fn iterate_pixel(
     camera: &Camera,
     background: Color,
     world: &dyn Hittable,
+    lights: &dyn Hittable,
 ) {
     let (x, y, pixel) = arg;
     // flip y to match results in the book
     let y = camera.height as u32 - 1 - y;
-    let color = pixel_color(x, y, camera, background, world);
+    let color = render_pixel(x, y, camera, background, world, lights);
     write_color(pixel, color, camera.samples_per_pixel);
-}
-
-fn pixel_color(x: u32, y: u32, camera: &Camera, background: Color, world: &dyn Hittable) -> Color {
-    let mut color = color::BLACK;
-    for _ in 0..camera.samples_per_pixel {
-        let u = (x as f64 + random_f64()) / (camera.width - 1) as f64;
-        let v = (y as f64 + random_f64()) / (camera.height - 1) as f64;
-        let r = camera.get_ray(u, v);
-        color = color + ray_color(&r, background, world, camera.max_depth);
-    }
-    color
 }
 
 fn write_color(pixel: &mut Rgb<u8>, color: Color, samples_per_pixel: usize) {

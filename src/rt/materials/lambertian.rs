@@ -1,12 +1,14 @@
 use std::sync::Arc;
 
-use super::Material;
+use super::{scatter_record::ScatterRecord, Material};
 use crate::rt::{
     color::Color,
-    random_unit_vector,
+    pdfs::cosine_pdf::CosinePdf,
     ray::Ray,
     shapes::hit_record::HitRecord,
     textures::{solid_color::SolidColor, Texture},
+    vec3::Vec3,
+    PI,
 };
 
 pub struct Lambertian {
@@ -24,17 +26,19 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        let mut scatter_direction = rec.normal + random_unit_vector();
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord) -> Option<ScatterRecord> {
+        Some(ScatterRecord::Diffuse {
+            attenuation: self.albedo.value(rec.u, rec.v, rec.p),
+            pdf: Box::new(CosinePdf::new(rec.normal)),
+        })
+    }
 
-        // Catch degenerate scatter direction
-        if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
+    fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let cosine = Vec3::dot(rec.normal, Vec3::unit_vector(scattered.direction));
+        if cosine < 0.0 {
+            0.0
+        } else {
+            cosine / PI
         }
-
-        Some((
-            self.albedo.value(rec.u, rec.v, rec.p),
-            Ray::new(rec.p, scatter_direction, r_in.time),
-        ))
     }
 }

@@ -13,6 +13,24 @@ pub const ZERO: Vec3 = Vec3 {
     z: 0.0,
 };
 
+pub const UNIT_X: Vec3 = Vec3 {
+    x: 1.0,
+    y: 0.0,
+    z: 0.0,
+};
+
+pub const UNIT_Y: Vec3 = Vec3 {
+    x: 0.0,
+    y: 1.0,
+    z: 0.0,
+};
+
+pub const UNIT_Z: Vec3 = Vec3 {
+    x: 0.0,
+    y: 0.0,
+    z: 1.0,
+};
+
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x, y, z }

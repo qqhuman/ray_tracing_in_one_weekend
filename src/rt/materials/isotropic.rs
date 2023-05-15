@@ -2,9 +2,6 @@ use std::sync::Arc;
 
 use crate::rt::{
     color::Color,
-    random_in_unit_sphere,
-    ray::Ray,
-    shapes::hit_record::HitRecord,
     textures::{solid_color::SolidColor, Texture},
 };
 
@@ -25,10 +22,11 @@ impl Isotropic {
 }
 
 impl Material for Isotropic {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray)> {
-        Some((
-            self.albedo.value(rec.u, rec.v, rec.p),
-            Ray::new(rec.p, random_in_unit_sphere(), r_in.time),
-        ))
-    }
+    // fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Color, Ray, f64)> {
+    //     Some((
+    //         self.albedo.value(rec.u, rec.v, rec.p),
+    //         Ray::new(rec.p, random_in_unit_sphere(), r_in.time),
+    //         0.0
+    //     ))
+    // }
 }

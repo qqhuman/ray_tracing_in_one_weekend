@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::rt::ray::Ray;
+use crate::rt::{random_i32_between, ray::Ray, vec3::Vec3, Point3};
 
 use super::{aabb::Aabb, HitRecord, Hittable};
 
@@ -52,5 +52,18 @@ impl Hittable for HittableList {
             output_box = Aabb::surrounding_box(&output_box, &tail_box);
         }
         return Some(output_box);
+    }
+
+    fn pdf_value(&self, o: Point3, v: Vec3) -> f64 {
+        let weight = 1.0 / self.objects.len() as f64;
+        self.objects
+            .iter()
+            .map(|obj| weight * obj.pdf_value(o, v))
+            .sum()
+    }
+
+    fn random(&self, o: Point3) -> Vec3 {
+        let index = random_i32_between(0, self.objects.len() as i32 - 1) as usize;
+        self.objects[index].random(o)
     }
 }
