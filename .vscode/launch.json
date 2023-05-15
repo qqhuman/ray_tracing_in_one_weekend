@@ -7,16 +7,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'gfx'",
+            "name": "Debug unit tests in library 'ray_tarcing_in_one_weekend'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
                     "--lib",
-                    "--package=gfx"
+                    "--package=ray_tarcing_in_one_weekend"
                 ],
                 "filter": {
-                    "name": "gfx",
+                    "name": "ray_tarcing_in_one_weekend",
                     "kind": "lib"
                 }
             },
@@ -26,15 +26,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'gfx'",
+            "name": "Debug executable 'ray_tarcing_in_one_weekend'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=gfx",
-                    "--package=gfx"
+                    "--bin=ray_tarcing_in_one_weekend",
+                    "--package=ray_tarcing_in_one_weekend"
                 ],
                 "filter": {
-                    "name": "gfx",
+                    "name": "ray_tarcing_in_one_weekend",
                     "kind": "bin"
                 }
             },
@@ -44,16 +44,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'gfx'",
+            "name": "Debug unit tests in executable 'ray_tarcing_in_one_weekend'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=gfx",
-                    "--package=gfx"
+                    "--bin=ray_tarcing_in_one_weekend",
+                    "--package=ray_tarcing_in_one_weekend"
                 ],
                 "filter": {
-                    "name": "gfx",
+                    "name": "ray_tarcing_in_one_weekend",
                     "kind": "bin"
                 }
             },

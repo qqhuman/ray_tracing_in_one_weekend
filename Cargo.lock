@@ -222,16 +222,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gfx"
-version = "0.1.0"
-dependencies = [
- "fastrand",
- "image",
- "indicatif",
- "rayon",
-]
-
-[[package]]
 name = "gif"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -507,6 +497,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4424af4bf778aae2051a77b60283332f386554255d722233d09fbfc7e30da2fc"
 dependencies = [
  "proc-macro2",
+]
+
+[[package]]
+name = "ray_tarcing_in_one_weekend"
+version = "0.1.0"
+dependencies = [
+ "fastrand",
+ "image",
+ "indicatif",
+ "rayon",
 ]
 
 [[package]]

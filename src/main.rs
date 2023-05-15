@@ -1,4 +1,4 @@
-use gfx::rt::{
+use ray_tarcing_in_one_weekend::rt::{
     camera::Camera,
     color::{self, Color},
     materials::{
@@ -255,7 +255,7 @@ fn _two_perlin_spheres() -> (HittableList, Camera, Color) {
 
 fn _earth() -> (HittableList, Camera, Color) {
     let earth_texture = Arc::new(ImageTexture::from_file(
-        "C:\\my_space\\Code\\rust\\gfx\\textures\\earthmap.jpg",
+        "C:\\my_space\\Code\\rust\\ray_tarcing_in_one_weekend\\textures\\earthmap.jpg",
     ));
     let material: Arc<dyn Material> = Arc::new(Lambertian::from_texture(earth_texture));
     let mut world = HittableList::default();
@@ -709,7 +709,7 @@ fn _final_scene() -> (HittableList, Camera, Color) {
         Point3::new(400.0, 200.0, 400.0),
         100.0,
         Arc::new(Lambertian::from_texture(Arc::new(ImageTexture::from_file(
-            "C:\\my_space\\Code\\rust\\gfx\\textures\\earthmap.jpg",
+            "C:\\my_space\\Code\\rust\\ray_tarcing_in_one_weekend\\textures\\earthmap.jpg",
         )))),
     )));
     objects.add(Arc::new(Sphere::new(
